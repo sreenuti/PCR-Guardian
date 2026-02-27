@@ -18,7 +18,7 @@ const onboardingSchema = z
     consentEmail: z.boolean(),
     consentVoiceAi: z.boolean(),
     acceptDisclaimer: z.literal(true, {
-      errorMap: () => ({ message: "You must accept the disclaimer to continue." }),
+      message: "You must accept the disclaimer to continue.",
     }),
   })
   .refine(

@@ -164,7 +164,7 @@ async function generateNoticePdf(
       ? "pc-209-notice"
       : "cure-confirmation";
 
-  return new NextResponse(pdfBytes, {
+  return new NextResponse(pdfBytes as any, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
