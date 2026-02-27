@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import type { Violation, Profile } from "@/types/database";
@@ -174,8 +174,8 @@ async function generateNoticePdf(
 }
 
 export async function GET(
-  _req: Request,
-  context: { params: Promise<{ violationId: string; noticeType: NoticeType }> }
+  request: NextRequest,
+  context: { params: Promise<{ violationId: string; noticeType: string }> }
 ) {
   const { violationId, noticeType } = await context.params;
 
@@ -224,7 +224,7 @@ export async function GET(
     .single();
 
   return generateNoticePdf(
-    noticeType,
+    noticeType as NoticeType,
     violation as Violation,
     (profile as Profile) ?? null
   );
