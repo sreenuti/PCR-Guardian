@@ -1,0 +1,93 @@
+// Prisma schema for Supabase (PostgreSQL)
+// https://supabase.com/docs/guides/database/prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Properties ---
+model Property {
+  id            String        @id @default(cuid())
+  address       String
+  unit          String?
+  city          String?
+  state         String?
+  zip           String?
+  ownerName     String?       @map("owner_name")
+  ownerEmail    String?       @map("owner_email")
+  ownerPhone    String?       @map("owner_phone")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  violations     Violation[]
+  communications Communication[]
+
+  @@map("properties")
+}
+
+// --- Violations ---
+model Violation {
+  id          String   @id @default(cuid())
+  propertyId  String   @map("property_id")
+  description String?
+  startDate   DateTime @map("start_date")
+  cureDate    DateTime? @map("cure_date")
+  dailyRate   Decimal  @map("daily_rate") @db.Decimal(10, 2)
+  status      ViolationStatus @default(OPEN)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  property       Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  communications Communication[]
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([startDate])
+  @@map("violations")
+}
+
+enum ViolationStatus {
+  OPEN
+  CURING
+  CURED
+  CLOSED
+  APPEALED
+}
+
+// --- Communications (SMS, Email, Voice AI) ---
+model Communication {
+  id           String            @id @default(cuid())
+  violationId  String?           @map("violation_id")
+  propertyId   String?           @map("property_id")
+  channel      CommunicationChannel
+  direction    CommunicationDirection @default(OUTBOUND)
+  subject      String?           // Email subject; null for SMS/Voice
+  body         String?           // SMS/Email body or transcript summary
+  externalId   String?           @map("external_id") // Provider message ID (Twilio, etc.)
+  metadata     Json?             // Provider-specific payload (duration, segments, etc.)
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  violation Violation? @relation(fields: [violationId], references: [id], onDelete: SetNull)
+  property  Property?  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([violationId])
+  @@index([propertyId])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("communications")
+}
+
+enum CommunicationChannel {
+  SMS
+  EMAIL
+  VOICE_AI
+}
+
+enum CommunicationDirection {
+  INBOUND
+  OUTBOUND
+}
